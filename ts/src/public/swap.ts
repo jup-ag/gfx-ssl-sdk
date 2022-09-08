@@ -24,8 +24,13 @@ let wasmInited = false;
 
 export { wasm };
 export interface Quote {
-  out: BigInt;
+  amountIn: BigInt;
+  fee: BigInt;
+  amountOut: BigInt;
   impact: number;
+  swapPrice: number;
+  instantPrice: number;
+  oraclePrice: number;
 }
 
 export class SyncSwap {
@@ -324,10 +329,19 @@ class SyncQuoter {
     };
   }
 
-  public getQuote(inTokenAmount: BigInt, prepared: Prepared) {
+  public getQuote(inTokenAmount: BigInt, prepared: Prepared): Quote {
     const swapWASM = wasm.swap;
 
-    if (inTokenAmount === 0n) return { impact: 0, out: 0n };
+    if (inTokenAmount === 0n)
+      return {
+        amountIn: 0n,
+        fee: 0n,
+        amountOut: 0n,
+        impact: 0,
+        swapPrice: 0,
+        instantPrice: 0,
+        oraclePrice: 0,
+      };
 
     const out = swapWASM(
       prepared.sslInData.slice(),
@@ -342,8 +356,13 @@ class SyncQuoter {
     );
 
     const finalResult: Quote = {
-      out: out.out,
+      amountIn: out.amount_in,
+      fee: out.fee_paid,
+      amountOut: out.amount_out,
       impact: out.price_impact,
+      swapPrice: out.swap_price,
+      instantPrice: out.insta_price,
+      oraclePrice: out.oracle_price,
     };
 
     return finalResult;
@@ -432,8 +451,19 @@ class Quoter extends SyncQuoter {
     };
   }
 
-  public quote(inTokenAmount: BigInt) {
-    if (inTokenAmount === 0n) return { impact: 0, out: 0n };
+  public quote(inTokenAmount: BigInt): Quote {
+    const swapWASM = wasm.swap;
+
+    if (inTokenAmount === 0n)
+      return {
+        amountIn: 0n,
+        fee: 0n,
+        amountOut: 0n,
+        impact: 0,
+        swapPrice: 0,
+        instantPrice: 0,
+        oraclePrice: 0,
+      };
 
     if (this.prepared === undefined) throw "Run prepare first";
     const prepared = this.prepared;
