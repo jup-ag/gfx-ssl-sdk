@@ -26,11 +26,11 @@
   },
   "homepage": "https://github.com/GooseFX1/gfx-ssl-sdk/tree/master/ts",
   "scripts": {
-    "build": "tsup ./src/index.ts --format cjs,esm --dts",
-    "watch": "tsup ./src/index.ts --format cjs,esm --dts -w",
+    "build": "tsup ./src/index.ts",
+    "watch": "tsup ./src/index.ts -w",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "prepare": "cd .. && husky install",
-    "prepublishOnly": "tsup ./src/index.ts --format cjs,esm --dts",
+    "prepublishOnly": "tsup ./src/index.ts",
     "test": "jest"
   },
   "dependencies": {
