@@ -1,5 +1,5 @@
 import { Program, Provider, Idl, BN } from "@project-serum/anchor";
-import { PAIR_LAYOUT } from "../layouts";
+import { PAIR_LAYOUT, SSL_LAYOUT } from "../layouts";
 import {
   TOKEN_PROGRAM_ID,
   NATIVE_MINT,
@@ -256,6 +256,7 @@ type Prepared = {
   liabilityOut: BigInt;
   swappedLiabilityOut: BigInt;
   registry: wasm.OracleRegistry;
+  suspended: boolean;
 };
 
 export const loadWasm = async () => {
@@ -329,7 +330,11 @@ class SyncQuoter {
     };
   }
 
-  public getQuote(inTokenAmount: BigInt, prepared: Prepared): Quote {
+  public getQuote(
+    inTokenAmount: BigInt,
+    prepared: Prepared,
+    silent?: boolean
+  ): Quote {
     const swapWASM = wasm.swap;
 
     if (inTokenAmount === 0n)
@@ -343,19 +348,37 @@ class SyncQuoter {
         oraclePrice: 0,
       };
 
-    const out = swapWASM(
-      prepared.sslInData.slice(),
-      prepared.sslOutData.slice(),
-      prepared.pairData.slice(),
-      prepared.liabilityIn,
-      prepared.liabilityOut,
-      prepared.swappedLiabilityIn,
-      prepared.swappedLiabilityOut,
-      prepared.registry,
-      inTokenAmount
-    );
+    let out: wasm.SwapResult;
 
-    const finalResult: Quote = {
+    try {
+      out = swapWASM(
+        prepared.sslInData.slice(),
+        prepared.sslOutData.slice(),
+        prepared.pairData.slice(),
+        prepared.liabilityIn,
+        prepared.liabilityOut,
+        prepared.swappedLiabilityIn,
+        prepared.swappedLiabilityOut,
+        prepared.registry,
+        inTokenAmount
+      );
+    } catch (e) {
+      if (silent) {
+        return {
+          amountIn: inTokenAmount,
+          fee: 0n,
+          amountOut: 0n,
+          impact: 1,
+          swapPrice: 0,
+          instantPrice: 0,
+          oraclePrice: 0,
+        };
+      } else {
+        throw e;
+      }
+    }
+
+    return {
       amountIn: out.amount_in,
       fee: out.fee_paid,
       amountOut: out.amount_out,
@@ -364,8 +387,6 @@ class SyncQuoter {
       instantPrice: out.insta_price,
       oraclePrice: out.oracle_price,
     };
-
-    return finalResult;
   }
 }
 class Quoter extends SyncQuoter {
@@ -448,25 +469,34 @@ class Quoter extends SyncQuoter {
       liabilityOut: liabilityVaultOut.amount,
       swappedLiabilityOut: swappedLiabilityVaultOut.amount,
       registry: registry,
+      suspended:
+        new SSL(sslInData).isSuspended() || new SSL(sslOutData).isSuspended(),
     };
   }
 
-  public quote(inTokenAmount: BigInt): Quote {
+  public isSuspended(): boolean {
+    if (this.prepared === undefined) throw "Run prepare first";
+
+    return this.prepared.suspended;
+  }
+
+  public quote(inTokenAmount: BigInt, silent: boolean = true): Quote {
     const swapWASM = wasm.swap;
 
-    if (inTokenAmount === 0n) return {
-      amountIn: 0n,
-      fee: 0n,
-      amountOut: 0n,
-      impact: 0,
-      swapPrice: 0,
-      instantPrice: 0,
-      oraclePrice: 0,
-    };
+    if (inTokenAmount === 0n)
+      return {
+        amountIn: 0n,
+        fee: 0n,
+        amountOut: 0n,
+        impact: 0,
+        swapPrice: 0,
+        instantPrice: 0,
+        oraclePrice: 0,
+      };
 
     if (this.prepared === undefined) throw "Run prepare first";
     const prepared = this.prepared;
 
-    return this.getQuote(inTokenAmount, prepared);
+    return this.getQuote(inTokenAmount, prepared, silent);
   }
 }
