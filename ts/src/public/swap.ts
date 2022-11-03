@@ -24,9 +24,9 @@ let wasmInited = false;
 
 export { wasm };
 export interface Quote {
-  amountIn: BigInt;
-  fee: BigInt;
-  amountOut: BigInt;
+  amountIn: bigint;
+  fee: bigint;
+  amountOut: bigint;
   impact: number;
   swapPrice: number;
   instantPrice: number;
@@ -115,7 +115,7 @@ export class Swap extends SyncSwap {
   public getQuote = async (
     tokenIn: PublicKey,
     tokenOut: PublicKey,
-    inTokenAmount: BigInt
+    inTokenAmount: bigint
   ): Promise<Quote> => {
     const quoter = await this.getQuoter(tokenIn, tokenOut);
     await quoter.prepare();
@@ -125,7 +125,7 @@ export class Swap extends SyncSwap {
   public getMinimumQuote = async (
     tokenA: PublicKey,
     tokenB: PublicKey,
-    inTokenAmount: BigInt,
+    inTokenAmount: bigint,
     slippage: number
   ) => {
     const result = await this.getQuote(tokenA, tokenB, inTokenAmount);
@@ -138,8 +138,8 @@ export class Swap extends SyncSwap {
   public createSwapIx = async (
     tokenA: PublicKey,
     tokenB: PublicKey,
-    inTokenAmount: BigInt,
-    minOut: BigInt,
+    inTokenAmount: bigint,
+    minOut: bigint,
     wallet: PublicKey,
     referrerTokenAccount?: PublicKey // referrerTokenAccount in TokenA
   ): Promise<Array<TransactionInstruction>> => {
@@ -251,10 +251,10 @@ type Prepared = {
   pairData: Buffer;
   sslInData: Buffer;
   sslOutData: Buffer;
-  liabilityIn: BigInt;
-  swappedLiabilityIn: BigInt;
-  liabilityOut: BigInt;
-  swappedLiabilityOut: BigInt;
+  liabilityIn: bigint;
+  swappedLiabilityIn: bigint;
+  liabilityOut: bigint;
+  swappedLiabilityOut: bigint;
   registry: wasm.OracleRegistry;
   suspended: boolean;
 };
@@ -331,7 +331,7 @@ class SyncQuoter {
   }
 
   public getQuote(
-    inTokenAmount: BigInt,
+    inTokenAmount: bigint,
     prepared: Prepared,
     silent?: boolean
   ): Quote {
@@ -480,7 +480,7 @@ class Quoter extends SyncQuoter {
     return this.prepared.suspended;
   }
 
-  public quote(inTokenAmount: BigInt, silent: boolean = true): Quote {
+  public quote(inTokenAmount: bigint, silent: boolean = true): Quote {
     const swapWASM = wasm.swap;
 
     if (inTokenAmount === 0n)
