@@ -460,7 +460,9 @@ class Quoter extends SyncQuoter {
         const acctInfo = await this.connection.getAccountInfo(elem.address);
         if (acctInfo?.data) {
           registry.add_oracle(elem.address.toBuffer(), acctInfo.data);
-          publishedSlots.push(parsePriceData(acctInfo.data).aggregate.publishSlot);
+          publishedSlots.push(
+            parsePriceData(acctInfo.data).aggregate.publishSlot
+          );
         }
       }
     }
@@ -474,9 +476,10 @@ class Quoter extends SyncQuoter {
       liabilityOut: liabilityVaultOut.amount,
       swappedLiabilityOut: swappedLiabilityVaultOut.amount,
       registry: registry,
-      suspended: (new SSL(sslInData)).isSuspended() || (new SSL(sslOutData)).isSuspended(),
+      suspended:
+        new SSL(sslInData).isSuspended() || new SSL(sslOutData).isSuspended(),
       publishedSlots: publishedSlots.map((val) => BigInt(val)),
-      maxDelay: maxDelay
+      maxDelay: maxDelay,
     };
   }
 
