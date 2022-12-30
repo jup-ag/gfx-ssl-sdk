@@ -12,7 +12,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { Buffer } from "buffer";
-import { Network, ADDRESSES } from "../constants";
+import { ADDRESSES } from "../constants";
 import * as SwapIDL from "../idl/gfx_ssl_idl.json";
 import { findAssociatedTokenAddress } from "./utils";
 import wasmData from "../wasm/gfx_ssl_wasm_data";
@@ -20,6 +20,7 @@ import init, * as wasm from "../wasm/gfx_ssl_wasm";
 import { getAccount } from "@solana/spl-token";
 import { SSL } from "./ssl";
 import { parsePriceData, PriceStatus } from "@pythnetwork/client";
+export { default as wasmData } from "../wasm/gfx_ssl_wasm_data";
 
 let wasmInited = false;
 
@@ -337,7 +338,8 @@ class SyncQuoter {
   public getQuote(
     inTokenAmount: bigint,
     prepared: Prepared,
-    silent?: boolean
+    silent: boolean,
+    niter: number
   ): Quote {
     const swapWASM = wasm.swap;
 
@@ -364,7 +366,8 @@ class SyncQuoter {
         prepared.swappedLiabilityIn,
         prepared.swappedLiabilityOut,
         prepared.registry,
-        inTokenAmount
+        inTokenAmount,
+        niter
       );
     } catch (e) {
       if (silent) {
@@ -482,7 +485,7 @@ class Quoter extends SyncQuoter {
         new SSL(sslInData).isSuspended() || new SSL(sslOutData).isSuspended(),
       publishedSlots: publishedSlots.map((val) => BigInt(val)),
       pythStatus,
-      maxDelay: maxDelay
+      maxDelay: maxDelay,
     };
   }
 
@@ -500,7 +503,11 @@ class Quoter extends SyncQuoter {
     return suspended;
   }
 
-  public quote(inTokenAmount: bigint, silent: boolean = true): Quote {
+  public quote(
+    inTokenAmount: bigint,
+    silent: boolean = true,
+    niter: number = 64
+  ): Quote {
     const swapWASM = wasm.swap;
 
     if (inTokenAmount === 0n)
@@ -517,6 +524,6 @@ class Quoter extends SyncQuoter {
     if (this.prepared === undefined) throw "Run prepare first";
     const prepared = this.prepared;
 
-    return this.getQuote(inTokenAmount, prepared, silent);
+    return this.getQuote(inTokenAmount, prepared, silent, niter);
   }
 }
