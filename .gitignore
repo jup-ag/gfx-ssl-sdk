@@ -7,3 +7,4 @@ node_modules
 .local-pack
 /ts/dist
 ./tests
+.DS_Store
