@@ -12,7 +12,7 @@ name = "quote_fn"
 name = "jupiter"
 
 [features]
-default = ["jupiter_amm"]
+default = []
 jupiter_amm = ["jupiter", "jupiter-core"]
 
 [dependencies]
