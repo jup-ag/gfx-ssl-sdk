@@ -24,10 +24,10 @@ use solana_program::sysvar::SysvarId;
 use solana_sdk::pubkey;
 use std::{
     collections::{HashMap, HashSet},
-    ffi::CStr,
     fmt::Debug,
     mem,
 };
+use std::ffi::CString;
 
 const DISCRIMINANT: usize = 8;
 
@@ -480,7 +480,7 @@ impl Amm for GfxAmm {
                 quote
             }
             QuoteResult::Error(err) => unsafe {
-                let c_str = CStr::from_ptr(err);
+                let c_str = CString::from_raw(err);
                 let rust_str = c_str.to_str().expect("bad string encoding");
                 throw!(anyhow!("{}", rust_str))
             },
