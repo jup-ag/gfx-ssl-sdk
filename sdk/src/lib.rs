@@ -1,4 +1,4 @@
-mod avec;
+pub mod avec;
 pub mod controller;
 pub mod error;
 #[cfg(feature = "jupiter_amm")]

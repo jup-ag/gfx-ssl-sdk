@@ -94,7 +94,7 @@ pub fn withdraw(ctx: &SSLInstructionContext, withdraw_percent: u64) -> Instructi
 }
 
 /// Factored out for use in `jupiter` module to fulfill `Amm` trait contract.
-pub(crate) fn swap_account_metas(
+pub fn swap_account_metas(
     ctx: &SSLInstructionContext,
     ssl_in_mint: &Pubkey,
     ssl_out_mint: &Pubkey,
